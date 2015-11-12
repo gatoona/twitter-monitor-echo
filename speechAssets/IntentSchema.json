@@ -1,0 +1,51 @@
+{
+  "intents": [
+    {
+      "intent": "GetArrivalsIntent",
+      "slots": [
+        {
+          "name": "routeBus",
+          "type": "AMAZON.NUMBER"
+        },
+        {
+          "name": "routeTrain",
+          "type": "TRAIN_LINES"
+        },
+        {
+          "name": "stop",
+          "type": "AMAZON.NUMBER"
+        }
+      ]
+    },
+    {
+      "intent": "GetAlertsIntent",
+      "slots": [
+        {
+          "name": "routeBus",
+          "type": "AMAZON.NUMBER"
+        },
+        {
+          "name": "routeTrain",
+          "type": "TRAIN_LINES"
+        }
+      ]
+    },
+    {
+      "intent": "GetInfoIntent",
+      "slots": [
+        {
+          "name": "infoNumber",
+          "type": "AMAZON.NUMBER"
+        },
+        {
+          "name": "routeTrain",
+          "type": "TRAIN_LINES"
+        }
+      ]
+    },
+    {
+      "intent": "HelpIntent",
+      "slots": []
+    }
+  ]
+}
