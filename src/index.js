@@ -17,9 +17,6 @@ var urlAlerts = function(stopId){
 // 5 = requested arrival with route but no stop
 // 6 = requested arrival with route with stop
 
-var sessionNow = 0;
-var route = null;
-var stop = null;
 
 var getArrivalsJSON = function(stopId, callback){
   http.get(urlArrival(stopId), function(res){
@@ -41,31 +38,34 @@ var getArrivalsJSON = function(stopId, callback){
 
 //Arrivals Request
 var handleArrivalsRequest = function(intent, session, response){
-  var routeBus = intent.slots.routeBus.value;
-  var routeTrain = intent.slots.routeTrain.value;
-  var stop = intent.slots.stop.value;
+  var routeBus = intent.slots.routeBus.value || null;
+  var routeTrain = intent.slots.routeTrain.value || null;
+  var stop = intent.slots.stop.value || null;
 
   var text = '';
 
   //User states no route or stop. "Get arrivals"
   if (routeBus == null && routeTrain == null && stop == null){
+    session.attributes.stage = 3;
     text = 'For what line would you like arrivals for?';
-    sessionNow = 3;
     response.ask(text);
   }
 
   //User states bus route but no stop. "Get arrivals for line 35."
   else if (routeBus != null && routeTrain == null && stop == null){
-    text = 'Line ' + routeBus + ', got it. What is the stop ID?';
-    sessionNow = 5;
+    session.attributes.stage = 5;
+    session.attributes.route = routeBus;
+    text = 'Line ' + routeBus + ', got it. What is the stop number?';
     response.ask(text);
   }
 
   //User states train route but no stop. "Get arrivals for orange line."
   else if (routeBus == null && routeTrain != null && stop == null){
-    text = 'The ' + routeTrain + ' line, got it. What is the stop ID?';
-    sessionNow = 5;
+    session.attributes.stage = 5;
+    session.attributes.route = routeTrain;
+    text = 'The ' + routeTrain + ' line, got it. What is the stop number?';
     response.ask(text);
+
   }
 
   //User states bus route and stop. "Get arrivals for line 35 at 1234."
@@ -101,14 +101,14 @@ var handleArrivalsRequest = function(intent, session, response){
 
 //Alerts Request
 var handleAlertsRequest = function(intent, session, response){
-	var routeBus = intent.slots.routeBus.value;
-	var routeTrain = intent.slots.routeTrain.value;
+	var routeBus = intent.slots.routeBus.value || null;
+	var routeTrain = intent.slots.routeTrain.value || null;
 
 	var text = '';
 
 	if (routeBus == null && routeTrain == null){
+    session.attributes.stage = 1;
 		text = 'For what line would you like alerts for?';
-		sessionNow = 1;
 		response.ask(text);
 	}
 	else if (routeBus == null && routeTrain != null){
@@ -123,16 +123,16 @@ var handleAlertsRequest = function(intent, session, response){
 
 //Info Request
 var handleInfoRequest = function(intent, session, response){
-	var routeTrain = intent.slots.routeTrain.value;
-	var infoNumber = intent.slots.infoNumber.value;
+	var routeTrain = intent.slots.routeTrain.value || null;
+	var infoNumber = intent.slots.infoNumber.value || null;
 	var text = '';
 
-	if (sessionNow == 0){
+	if (session.attributes.stage == 0){
 		text = 'I didnt quite get that. You can say, get arrivals or get alerts.';
 		response.ask(text);
 	}
 
-	else if (sessionNow == 1){
+	if (session.attributes.stage == 1){
 		if (routeTrain == null && infoNumber != null){
 			text = 'There are no alerts for bus line ' + infoNumber;
 			response.tellWithCard(text, text, text);
@@ -143,30 +143,30 @@ var handleInfoRequest = function(intent, session, response){
 		}
 	}
 
-  //get stop for arrivals
-  else if (sessionNow == 3){
-    if (routeTrain == null && infoNumber != null){
-      text = 'Got it! Please state a stop id for bus line ' + infoNumber;
-      sessionNow = 5;
-      route = infoNumber;
-      response.ask(text);
+  //speak arrivals
+  if (session.attributes.stage == 5){
+    if (infoNumber != null && session.attributes.route != null){
+      text = 'The ' + session.attributes.route + ' will arrive in 5 minutes at stop ' + infoNumber;
+      response.tellWithCard(text, text, text);
     }
-    else if (routeTrain != null && infoNumber == null){
-      text = 'Got it! Please state a stop id for the ' + routeTrain + ' line';
-      sessionNow = 5;
-      route = routeTrain;
+    else {
+      text = 'I didnt quite get that. What is the stop number?';
       response.ask(text);
     }
   }
 
-  //speak arrivals
-  else if (sessionNow == 5){
-    if (infoNumber != null && route != null){
-      text = 'The ' + route + ' will arrive in 5 minutes at stop ' + infoNumber;
-      response.tellWithCard(text, text, text);
+  //get stop for arrivals
+  if (session.attributes.stage == 3){
+    if (routeTrain == null && infoNumber != null){
+      session.attributes.stage = 5;
+      text = 'Got it! Please state a stop number for bus line ' + infoNumber;
+      session.attributes.route = infoNumber;
+      response.ask(text);
     }
-    else {
-      text = 'I didnt quite get that. What is the stop id?';
+    else if (routeTrain != null && infoNumber == null){
+      session.attributes.stage = 5;
+      text = 'Got it! Please state a stop number for the ' + routeTrain + ' line';
+      session.attributes.route = routeTrain;
       response.ask(text);
     }
   }
@@ -182,7 +182,7 @@ BusSchedule.prototype.constructor = BusSchedule;
 //On Call with no Intents
 BusSchedule.prototype.eventHandlers.onLaunch = function(launchRequest, session, response){
   var output = 'Hello ' +
-    'Would you like to get TriMet arrivals or alerts?';
+    'Welcome to TriMet. Would you like to get arrivals or alerts today?';
 
   var reprompt = 'You can say, get arrivals or get alerts.';
 
@@ -194,15 +194,12 @@ BusSchedule.prototype.intentHandlers = {
   GetArrivalsIntent: function(intent, session, response){
     handleArrivalsRequest(intent, session, response);
   },
-
-   GetAlertsIntent: function(intent, session, response){
+  GetAlertsIntent: function(intent, session, response){
     handleAlertsRequest(intent, session, response);
   },
-
-   GetInfoIntent: function(intent, session, response){
+  GetInfoIntent: function(intent, session, response){
     handleInfoRequest(intent, session, response);
   },
-
   HelpIntent: function(intent, session, response){
     var speechOutput = 'You can say, get arrivals or get alerts.';
     response.ask(speechOutput);
