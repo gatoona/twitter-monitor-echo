@@ -18,7 +18,7 @@ var urlAlerts = function(stopId){
 // 6 = requested arrival with route with stop
 
 
-var getArrivalsJSON = function(stopId, callback){
+var getJSON = function(stopId, callback){
   http.get(urlArrival(stopId), function(res){
     var body = '';
 
@@ -70,84 +70,77 @@ var handleArrivalsRequest = function(intent, session, response){
 
   //User states bus route and stop. "Get arrivals for line 35 at 1234."
   else if (routeBus != null && routeTrain == null && stop != null){
-    text = 'Bus line ' + routeBus + ' will arrive in 5 minutes at stop ' + stop;
-    response.tellWithCard(text, text, text);
+    text = {
+      speech: '<speak>Bus line ' + routeBus + ' will arrive in 5 minutes at stop <say-as interpret-as="spell-out">' + stop + '</say-as></speak>',
+      type: AlexaSkill.speechOutputType.SSML
+    };
+    response.tell(text);
   }
 
   //User states train route and stop. "Get arrivals for orange line at 1234."
   else if (routeBus == null && routeTrain != null && stop != null){
-    text = 'The ' + routeTrain + ' line will arrive in 5 minutes at stop ' + stop;
-    response.tellWithCard(text, text, text);
+    getJSON(stop, function(data){
+      text = {
+        speech: '<speak>The ' + routeTrain + ' will arrive in 5 minutes at ' + data.resultSet.location[0].desc + ', stop <say-as interpret-as="spell-out">' + stop + '</say-as></speak>',
+        type: AlexaSkill.speechOutputType.SSML
+      };
+      response.tell(text);
+    });
   }
-
-  // getArrivalsJSON(intent.slots.bus.value, function(data){
-  // 	console.log(data);
-  //   if(data.resultSet){
-  //     var text = data
-  //                 .resultSet
-  //                 .location[0]
-  //                 .desc;
-
-  //     var cardText = 'The next bus is: ' + text;
-  //   } else {
-  //     var text = 'That bus stop does not exist.'
-  //     var cardText = text;
-  //   }
-
-  //   var heading = 'Next bus for stop: ' + intent.slots.bus.value;
-  //   response.tellWithCard(text, heading, cardText);
-  // });
 };
 
 //Alerts Request
 var handleAlertsRequest = function(intent, session, response){
-	var routeBus = intent.slots.routeBus.value || null;
-	var routeTrain = intent.slots.routeTrain.value || null;
+  var routeBus = intent.slots.routeBus.value || null;
+  var routeTrain = intent.slots.routeTrain.value || null;
 
-	var text = '';
+  var text = '';
 
-	if (routeBus == null && routeTrain == null){
+  if (routeBus == null && routeTrain == null){
     session.attributes.stage = 1;
-		text = 'For what line would you like alerts for?';
-		response.ask(text);
-	}
-	else if (routeBus == null && routeTrain != null){
-		text = 'There are no alerts for the ' + routeTrain + ' line';
-		response.tellWithCard(text, text, text);
-	}
-	else if (routeBus != null && routeTrain == null){
-		text = 'There are no alerts for bus line ' + routeBus;
-		response.tellWithCard(text, text, text);
-	}
+    text = 'For what line would you like alerts for?';
+    response.ask(text);
+  }
+  else if (routeBus == null && routeTrain != null){
+    text = 'There are no alerts for the ' + routeTrain + ' line';
+    response.tell(text);
+  }
+  else if (routeBus != null && routeTrain == null){
+    text = 'There are no alerts for bus line ' + routeBus;
+    response.tell(text);
+  }
 };
 
 //Info Request
 var handleInfoRequest = function(intent, session, response){
-	var routeTrain = intent.slots.routeTrain.value || null;
-	var infoNumber = intent.slots.infoNumber.value || null;
-	var text = '';
+  var routeTrain = intent.slots.routeTrain.value || null;
+  var infoNumber = intent.slots.infoNumber.value || null;
+  var text = '';
 
-	if (session.attributes.stage == 0){
-		text = 'I didnt quite get that. You can say, get arrivals or get alerts.';
-		response.ask(text);
-	}
+  if (session.attributes.stage == 0){
+    text = 'I didnt quite get that. You can say, get arrivals or get alerts.';
+    response.ask(text);
+  }
 
-	if (session.attributes.stage == 1){
-		if (routeTrain == null && infoNumber != null){
-			text = 'There are no alerts for bus line ' + infoNumber;
-			response.tellWithCard(text, text, text);
-		}
-		else if (routeTrain != null && infoNumber == null){
-			text = 'There are no alerts for the ' + routeTrain + ' line';
-			response.tellWithCard(text, text, text);
-		}
-	}
+  if (session.attributes.stage == 1){
+    if (routeTrain == null && infoNumber != null){
+      text = 'There are no alerts for bus line' + infoNumber;
+      response.tell(text);
+    }
+    else if (routeTrain != null && infoNumber == null){
+      text = 'There are no alerts for the ' + routeTrain + ' line';
+      response.tell(text);
+    }
+  }
 
   //speak arrivals
   if (session.attributes.stage == 5){
     if (infoNumber != null && session.attributes.route != null){
-      text = 'The ' + session.attributes.route + ' will arrive in 5 minutes at stop ' + infoNumber;
-      response.tellWithCard(text, text, text);
+      text = {
+        speech: '<speak>The ' + session.attributes.route + ' will arrive in 5 minutes at stop <say-as interpret-as="spell-out">' + infoNumber + '</say-as></speak>',
+        type: AlexaSkill.speechOutputType.SSML
+      };
+      response.tell(text);
     }
     else {
       text = 'I didnt quite get that. What is the stop number?';
