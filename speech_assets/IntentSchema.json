@@ -1,0 +1,17 @@
+{
+  "intents": [
+    {
+      "intent": "GetSearchIntent",
+      "slots": [
+        {
+          "name": "searchWord",
+          "type": "SEARCH_WORD"
+        }
+      ]
+    },
+    {
+      "intent": "HelpIntent",
+      "slots": []
+    }
+  ]
+}

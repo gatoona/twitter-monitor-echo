@@ -1,0 +1,23 @@
+{
+  "name": "twitter-monitor-echo",
+  "version": "1.0.0",
+  "description": "Alexa skill to POST search term for Twitter monitor feed.",
+  "main": "index.js",
+  "scripts": {
+    "zip": "zip -r twitter-echo.zip node_modules/* src/* index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gatoona/trimet-echo.git"
+  },
+  "author": "TriMet",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gatoona/trimet-echo/issues"
+  },
+  "homepage": "https://github.com/gatoona/trimet-echo#readme",
+  "devDependencies": {
+    "request": "^2.75.0"
+  },
+  "dependencies": {}
+}
