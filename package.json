@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gatoona/trimet-echo.git"
+    "url": "git+https://github.com/gatoona/twitter-monitor-echo.git"
   },
   "author": "TriMet",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/gatoona/trimet-echo/issues"
+    "url": "https://github.com/gatoona/twitter-monitor-echo/issues"
   },
-  "homepage": "https://github.com/gatoona/trimet-echo#readme",
+  "homepage": "https://github.com/gatoona/twitter-monitor-echo#readme",
   "devDependencies": {
     "request": "^2.75.0"
   },
